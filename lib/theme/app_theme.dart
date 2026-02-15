@@ -70,7 +70,6 @@ class HalcyonTextStyles {
   );
 }
 
-/// Build a full ThemeData in Dracula style with compact desktop sizing.
 ThemeData buildDraculaTheme() {
   return ThemeData(
     brightness: Brightness.dark,

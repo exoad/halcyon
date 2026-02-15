@@ -127,7 +127,6 @@ class _HalcyonPrimaryButtonState extends State<HalcyonPrimaryButton> {
         ),
       ),
     );
-
     if (widget.tooltip != null) {
       button = Tooltip(message: widget.tooltip!, child: button);
     }

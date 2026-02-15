@@ -73,8 +73,10 @@ class SettingsService {
 
   static Future<void> setAlbumArtFitMode(AlbumArtFitMode mode) async {
     albumArtFitMode.value = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_albumArtFitModeKey, mode.name);
+    await (await SharedPreferences.getInstance()).setString(
+      _albumArtFitModeKey,
+      mode.name,
+    );
   }
 
   static List<SettingEntry> getDisplaySettings() {
