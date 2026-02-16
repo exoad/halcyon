@@ -1,7 +1,7 @@
 <div align="center">
     <h1>Halcyon</h1>
     <p>A simple, minimalist desktop music player created with Flutter.</p>
-    <img src="repo/screenshot.png" alt="Halcyon Screenshot" width="400">
+    <img src="repo/screenshot.png" alt="Halcyon Screenshot" width="460">
 </div>
 
 ## Features
