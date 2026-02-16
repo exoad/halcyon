@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:halcyon/services/audio_engine.dart';
+import 'package:halcyon/services/color_palette_service.dart';
 import 'package:halcyon/shared.dart';
 import 'package:halcyon/theme/app_theme.dart';
 
@@ -73,25 +74,22 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
     final count = widget.barCount;
     if (samples != null && samples.isNotEmpty) {
       final sampleCount = samples.length;
+      final sliceSize = sampleCount / count;
       for (var i = 0; i < count; i++) {
-        final progress = i / (count - 1).clamp(1, double.infinity);
-        final startIdx = (progress * sampleCount * 0.05).toInt();
-        final endIdx = (progress * sampleCount * 0.99).toInt().clamp(
-          0,
+        final startIdx = (i * sliceSize).floor();
+        final endIdx = math.min(
           sampleCount - 1,
+          ((i + 1) * sliceSize).floor() - 1,
         );
-        if (startIdx >= sampleCount) {
+        if (startIdx >= sampleCount || endIdx < startIdx) {
           _targetBars[i] = 0;
           continue;
         }
         double maxMagnitude = 0;
-        final rangeSize = math.max(1, endIdx - startIdx);
-        final step = math.max(1, rangeSize ~/ 20);
+        final rangeSize = math.max(1, endIdx - startIdx + 1);
+        final step = math.max(1, rangeSize ~/ 16);
         for (var j = startIdx; j <= endIdx; j += step) {
-          maxMagnitude = math.max(
-            maxMagnitude,
-            samples[j.clamp(0, sampleCount - 1)].abs(),
-          );
+          maxMagnitude = math.max(maxMagnitude, samples[j].abs());
         }
         _targetBars[i] = math.pow(maxMagnitude, 0.6).clamp(0.0, 1.0) as double;
       }
@@ -119,11 +117,19 @@ class _WaveformVisualizerState extends State<WaveformVisualizer>
       child: SizedBox(
         height: widget.height,
         width: double.infinity,
-        child: ValueListenableBuilder<int>(
-          valueListenable: _painterNotifier,
-          builder: (_, _, _) {
-            return CustomPaint(
-              painter: _WaveformPainter(bars: _bars, barCount: widget.barCount),
+        child: ValueListenableBuilder<PaletteColors?>(
+          valueListenable: ColorPaletteService.currentPalette,
+          builder: (_, __, ___) {
+            return ValueListenableBuilder<int>(
+              valueListenable: _painterNotifier,
+              builder: (_, _, _) {
+                return CustomPaint(
+                  painter: _WaveformPainter(
+                    bars: _bars,
+                    barCount: widget.barCount,
+                  ),
+                );
+              },
             );
           },
         ),
@@ -149,17 +155,63 @@ class _WaveformPainter extends CustomPainter {
     if (effectiveBarWidth <= 0) {
       return;
     }
-    final paint = Paint()..style = PaintingStyle.fill;
+
     final midY = size.height / 2;
+
+    // Create optimized waveform colors that are visible regardless of album art
+    final accentBase = AppColors.accent;
+    final accentHSL = HSLColor.fromColor(accentBase);
+
+    // Boost saturation and lightness for better visibility
+    final brightAccent = accentHSL
+        .withSaturation((accentHSL.saturation * 1.3).clamp(0.0, 1.0))
+        .withLightness((accentHSL.lightness * 1.15).clamp(0.0, 1.0))
+        .toColor();
+
+    // Ensure minimum brightness for visibility
+    var optimizedAccent = brightAccent;
+    final accentLum = optimizedAccent.computeLuminance();
+    if (accentLum < 0.35) {
+      // If too dark, brighten it
+      final hsl = HSLColor.fromColor(optimizedAccent);
+      optimizedAccent = hsl.withLightness(0.60).toColor();
+    }
+
+    // Create a subtle glow for inactive bars
+    final dimColor = AppColors.surfaceLight.withAlpha(180);
+
+    final fillPaint = Paint()..style = PaintingStyle.fill;
+    final glowPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 1.2);
+
     for (var i = 0; i < barCount; i++) {
       final value = bars[i].clamp(0.0, 1.0);
       final halfBar = math.max(2, value * size.height * 0.9) / 2;
       final x = i * barWidth + gap / 2;
-      paint.color = Color.lerp(
-        AppColors.surfaceLight,
-        AppColors.accent,
-        value,
-      )!;
+
+      // Interpolate between dim and bright colors based on value
+      final barColor = Color.lerp(dimColor, optimizedAccent, value)!;
+
+      // Draw subtle glow behind bar
+      if (value > 0.02) {
+        glowPaint.color = barColor.withAlpha(60);
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTRB(
+              x - 1,
+              midY - halfBar - 1,
+              x + effectiveBarWidth + 1,
+              midY + halfBar + 1,
+            ),
+            Shared.radius,
+          ),
+          glowPaint,
+        );
+      }
+
+      // Draw main bar
+      fillPaint.color = barColor;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTRB(
@@ -170,7 +222,7 @@ class _WaveformPainter extends CustomPainter {
           ),
           Shared.radius,
         ),
-        paint,
+        fillPaint,
       );
     }
   }

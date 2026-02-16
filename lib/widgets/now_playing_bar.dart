@@ -16,32 +16,38 @@ class NowPlayingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return HalcyonPanel(
-      padding: EdgeInsets.zero,
-      color: AppColors.surface.withAlpha(160),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 72,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                spacing: 12,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _albumArt(context),
-                  Expanded(child: _trackInfo()),
-                  _timeLabels(),
-                  const PlayerControls(),
-                ],
+    return ColorAwareBuilder(
+      builder: (context) {
+        return HalcyonPanel(
+          padding: EdgeInsets.zero,
+          color: AppColors.surface.withAlpha(160),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 72,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
+                    spacing: 12,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _albumArt(context),
+                      Expanded(child: _trackInfo()),
+                      _timeLabels(),
+                      const PlayerControls(),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              Divider(height: 1, color: AppColors.border.withAlpha(90)),
+              _seekBar(context),
+              Divider(height: 1, color: AppColors.border.withAlpha(90)),
+              const WaveformVisualizer(height: 70, barCount: 80),
+            ],
           ),
-          _seekBar(context),
-          const WaveformVisualizer(height: 70, barCount: 80),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -55,7 +61,9 @@ class NowPlayingBar extends StatelessWidget {
             cursor: SystemMouseCursors.click,
             child: Tooltip(
               message: 'Tap to change fit: ${fit.displayName}',
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeInOutCubic,
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
@@ -86,7 +94,9 @@ class NowPlayingBar extends StatelessWidget {
                                   ? PhosphorIconsBold.musicNote
                                   : PhosphorIconsBold.folderOpen,
                               size: 24,
-                              color: path != null ? AppColors.accent : AppColors.comment,
+                              color: path != null
+                                  ? AppColors.accent
+                                  : AppColors.comment,
                             ),
                           );
                         },
@@ -154,14 +164,20 @@ class NowPlayingBar extends StatelessWidget {
         ValueListenableBuilder<Duration>(
           valueListenable: _engine.position,
           builder: (_, pos, _) {
-            return Text(_formatDuration(pos), style: HalcyonTextStyles.timeLabel);
+            return Text(
+              _formatDuration(pos),
+              style: HalcyonTextStyles.timeLabel,
+            );
           },
         ),
         const SizedBox(height: 2),
         ValueListenableBuilder<Duration>(
           valueListenable: _engine.duration,
           builder: (_, dur, _) {
-            return Text(_formatDuration(dur), style: HalcyonTextStyles.timeLabel);
+            return Text(
+              _formatDuration(dur),
+              style: HalcyonTextStyles.timeLabel,
+            );
           },
         ),
       ],
@@ -184,15 +200,21 @@ class NowPlayingBar extends StatelessWidget {
                   inactiveTrackColor: AppColors.surfaceLight,
                   thumbColor: AppColors.accent,
                   trackHeight: 2,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 4),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 4,
+                  ),
                   overlayShape: const RoundSliderOverlayShape(overlayRadius: 8),
                   trackShape: const RectangularSliderTrackShape(),
                 ),
                 child: Slider(
-                  value: totalMs > 0 ? (pos.inMilliseconds / totalMs).clamp(0.0, 1.0) : 0.0,
+                  value: totalMs > 0
+                      ? (pos.inMilliseconds / totalMs).clamp(0.0, 1.0)
+                      : 0.0,
                   onChanged: totalMs > 0
                       ? (v) {
-                          _engine.seek(Duration(milliseconds: (v * totalMs).round()));
+                          _engine.seek(
+                            Duration(milliseconds: (v * totalMs).round()),
+                          );
                         }
                       : null,
                 ),

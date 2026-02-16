@@ -1,6 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:halcyon/services/color_palette_service.dart';
 import 'package:halcyon/shared.dart';
 import 'package:halcyon/theme/app_theme.dart';
+
+/// Rebuilds children when the color palette changes for smooth transitions
+class ColorAwareBuilder extends StatelessWidget {
+  const ColorAwareBuilder({super.key, required this.builder});
+
+  final WidgetBuilder builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<PaletteColors?>(
+      valueListenable: ColorPaletteService.currentPalette,
+      builder: (context, _, __) => builder(context),
+    );
+  }
+}
 
 class HalcyonIconButton extends StatefulWidget {
   const HalcyonIconButton({
@@ -35,42 +51,56 @@ class _HalcyonIconButtonState extends State<HalcyonIconButton> {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor =
-        widget.color ??
-        (widget.isActive ? AppColors.accent : AppColors.foreground);
-    final effectiveColor = _hovered
-        ? (widget.hoverColor ?? AppColors.accentHover)
-        : baseColor;
+    return ColorAwareBuilder(
+      builder: (context) {
+        final enabled = widget.onPressed != null;
+        final baseColor = enabled
+            ? (widget.color ??
+                  (widget.isActive ? AppColors.accent : AppColors.foreground))
+            : (widget.color ?? AppColors.comment);
+        final effectiveColor = _hovered
+            ? (widget.hoverColor ?? AppColors.accentHover)
+            : baseColor;
 
-    Widget button = MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) {
-        setState(() {
-          _hovered = true;
-        });
-      },
-      onExit: (_) {
-        setState(() {
-          _hovered = false;
-        });
-      },
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: AnimatedScale(
-          scale: _hovered ? 1.08 : 1.0,
-          duration: const Duration(milliseconds: 120),
-          child: Padding(
-            padding: widget.padding,
-            child: Icon(widget.icon, size: widget.size, color: effectiveColor),
+        Widget button = MouseRegion(
+          cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+          onEnter: enabled
+              ? (_) {
+                  setState(() {
+                    _hovered = true;
+                  });
+                }
+              : null,
+          onExit: enabled
+              ? (_) {
+                  setState(() {
+                    _hovered = false;
+                  });
+                }
+              : null,
+          child: GestureDetector(
+            onTap: enabled ? widget.onPressed : null,
+            child: AnimatedScale(
+              scale: _hovered ? 1.08 : 1.0,
+              duration: const Duration(milliseconds: 120),
+              child: Padding(
+                padding: widget.padding,
+                child: Icon(
+                  widget.icon,
+                  size: widget.size,
+                  color: effectiveColor,
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        );
 
-    if (widget.tooltip != null) {
-      button = Tooltip(message: widget.tooltip!, child: button);
-    }
-    return button;
+        if (widget.tooltip != null) {
+          button = Tooltip(message: widget.tooltip!, child: button);
+        }
+        return button;
+      },
+    );
   }
 }
 
@@ -99,38 +129,42 @@ class _HalcyonPrimaryButtonState extends State<HalcyonPrimaryButton> {
 
   @override
   Widget build(BuildContext context) {
-    Widget button = MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) {
-        setState(() {
-          _hovered = true;
-        });
-      },
-      onExit: (_) {
-        setState(() {
-          _hovered = false;
-        });
-      },
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: AnimatedScale(
-          scale: _hovered ? 1.06 : 1.0,
-          duration: const Duration(milliseconds: 120),
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Icon(
-              widget.icon,
-              size: widget.size,
-              color: _hovered ? AppColors.accentHover : AppColors.accent,
+    return ColorAwareBuilder(
+      builder: (context) {
+        Widget button = MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) {
+            setState(() {
+              _hovered = true;
+            });
+          },
+          onExit: (_) {
+            setState(() {
+              _hovered = false;
+            });
+          },
+          child: GestureDetector(
+            onTap: widget.onPressed,
+            child: AnimatedScale(
+              scale: _hovered ? 1.06 : 1.0,
+              duration: const Duration(milliseconds: 120),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Icon(
+                  widget.icon,
+                  size: widget.size,
+                  color: _hovered ? AppColors.accentHover : AppColors.accent,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+        if (widget.tooltip != null) {
+          button = Tooltip(message: widget.tooltip!, child: button);
+        }
+        return button;
+      },
     );
-    if (widget.tooltip != null) {
-      button = Tooltip(message: widget.tooltip!, child: button);
-    }
-    return button;
   }
 }
 
@@ -150,18 +184,22 @@ class HalcyonSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliderTheme(
-      data: Theme.of(context).sliderTheme.copyWith(
-        activeTrackColor: AppColors.accent,
-        inactiveTrackColor: AppColors.surfaceLight,
-        thumbColor: AppColors.accent,
-        trackHeight: 3,
-        thumbShape: const RoundSliderThumbShape(
-          enabledThumbRadius: Shared.radiusValue,
-        ),
-        overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-      ),
-      child: Slider(value: value, min: min, max: max, onChanged: onChanged),
+    return ColorAwareBuilder(
+      builder: (context) {
+        return SliderTheme(
+          data: Theme.of(context).sliderTheme.copyWith(
+            activeTrackColor: AppColors.accent,
+            inactiveTrackColor: AppColors.surfaceLight,
+            thumbColor: AppColors.accent,
+            trackHeight: 3,
+            thumbShape: const RoundSliderThumbShape(
+              enabledThumbRadius: Shared.radiusValue,
+            ),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+          ),
+          child: Slider(value: value, min: min, max: max, onChanged: onChanged),
+        );
+      },
     );
   }
 }

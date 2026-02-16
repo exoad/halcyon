@@ -1,73 +1,101 @@
 import 'package:flutter/material.dart';
+import 'package:halcyon/services/color_palette_service.dart';
 
 /// Dracula color palette (IntelliJ-style / muted Darcula variant)
 class AppColors {
   AppColors._();
 
   // Core background / foreground
-  static const Color background = Color(0xFF2B2B2B); // Darcula base
-  static const Color currentLine = Color(0xFF313335);
-  static const Color foreground = Color(0xFFA9B7C6); // IntelliJ light-gray text
-  static const Color comment = Color(0xFF808080); // muted comments
+  static const Color _background = Color(0xFF2B2B2B); // Darcula base
+  static const Color _currentLine = Color(0xFF313335);
+  static const Color _foreground = Color(
+    0xFFA9B7C6,
+  ); // IntelliJ light-gray text
+  static const Color _comment = Color(0xFF808080); // muted comments
 
   // Accent palette (muted — not bright purple)
-  static const Color cyan = Color(0xFF4DB6AC);
-  static const Color green = Color(0xFF6A8759);
-  static const Color orange = Color(0xFFCC7832);
-  static const Color pink = Color(0xFFE6B0C0);
-  static const Color purple = Color(0xFF7B6FA3);
-  static const Color red = Color(0xFFBF616A);
-  static const Color yellow = Color(0xFFBFA756);
+  static const Color _cyan = Color(0xFF4DB6AC);
+  static const Color _green = Color(0xFF6A8759);
+  static const Color _orange = Color(0xFFCC7832);
+  static const Color _pink = Color(0xFFE6B0C0);
+  static const Color _purple = Color(0xFF7B6FA3);
+  static const Color _red = Color(0xFFBF616A);
+  static const Color _yellow = Color(0xFFBFA756);
 
   // Derived / UI-specific shades tuned for a subtle, flat desktop look
-  static const Color surface = Color(0xFF313335);
-  static const Color surfaceLight = Color(0xFF3A3C3E);
-  static const Color border = Color(0xFF3C3F41);
-  static const Color textPrimary = foreground;
-  static const Color textSecondary = Color(0xFF9AA0A6);
-  static const Color accent = Color(0xFFB6693A); // rustic/faded orange accent
-  static const Color accentHover = Color(0xFFC78B5E);
-  static const Color controlBg = Color(0xFF2F3133);
-  static const Color controlHover = Color(0xFF3E4042);
-  static const Color progressBg = Color(0xFF3C3F41);
-  static const Color progressFill = accent;
+  static const Color _surface = Color(0xFF313335);
+  static const Color _surfaceLight = Color(0xFF3A3C3E);
+  static const Color _border = Color(0xFF3C3F41);
+  static const Color _textSecondary = Color(0xFF9AA0A6);
+  static const Color _accent = Color(0xFFB6693A); // rustic/faded orange accent
+  static const Color _accentHover = Color(0xFFC78B5E);
+  static const Color _controlBg = Color(0xFF2F3133);
+  static const Color _controlHover = Color(0xFF3E4042);
+  static const Color _progressBg = Color(0xFF3C3F41);
+
+  static PaletteColors? get _palette =>
+      ColorPaletteService.currentPalette.value;
+
+  static Color get background => _palette?.background ?? _background;
+  static Color get currentLine => _palette?.surface ?? _currentLine;
+  static Color get foreground => _palette?.textPrimary ?? _foreground;
+  static Color get comment => _palette?.comment ?? _comment;
+
+  static Color get cyan => _cyan;
+  static Color get green => _green;
+  static Color get orange => _orange;
+  static Color get pink => _pink;
+  static Color get purple => _purple;
+  static Color get red => _red;
+  static Color get yellow => _yellow;
+
+  static Color get surface => _palette?.surface ?? _surface;
+  static Color get surfaceLight => _palette?.surfaceLight ?? _surfaceLight;
+  static Color get border => _palette?.border ?? _border;
+  static Color get textPrimary => _palette?.textPrimary ?? _foreground;
+  static Color get textSecondary => _palette?.textSecondary ?? _textSecondary;
+  static Color get accent => _palette?.accent ?? _accent;
+  static Color get accentHover => _palette?.accentHover ?? _accentHover;
+  static Color get controlBg => _palette?.controlBg ?? _controlBg;
+  static Color get controlHover => _palette?.controlHover ?? _controlHover;
+  static Color get progressBg => _palette?.progressBg ?? _progressBg;
+  static Color get progressFill => _palette?.progressFill ?? accent;
 }
 
 /// Text styles tuned for a desktop audio player
 class HalcyonTextStyles {
   HalcyonTextStyles._();
 
-  static const TextStyle trackTitle = TextStyle(
+  static TextStyle get trackTitle => const TextStyle(
     fontFamily: 'Segoe UI',
     fontSize: 13,
     fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
     letterSpacing: 0.1,
     height: 1.3,
-  );
+    shadows: [
+      Shadow(color: Color(0x33000000), offset: Offset(0, 1), blurRadius: 2),
+    ],
+  ).copyWith(color: AppColors.textPrimary);
 
-  static const TextStyle artistName = TextStyle(
+  static TextStyle get artistName => const TextStyle(
     fontFamily: 'Segoe UI',
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
     height: 1.3,
-  );
+  ).copyWith(color: AppColors.textSecondary);
 
-  static const TextStyle trackMeta = TextStyle(
+  static TextStyle get trackMeta => const TextStyle(
     fontFamily: 'Segoe UI',
     fontSize: 11,
     fontWeight: FontWeight.w400,
-    color: AppColors.comment,
     height: 1.3,
-  );
+  ).copyWith(color: AppColors.comment);
 
-  static const TextStyle timeLabel = TextStyle(
+  static TextStyle get timeLabel => const TextStyle(
     fontFamily: 'Consolas',
     fontSize: 11,
     fontWeight: FontWeight.w400,
-    color: AppColors.textSecondary,
-  );
+  ).copyWith(color: AppColors.textSecondary);
 }
 
 ThemeData buildDraculaTheme() {
@@ -76,7 +104,7 @@ ThemeData buildDraculaTheme() {
     scaffoldBackgroundColor: Colors.transparent,
     canvasColor: AppColors.background,
     primaryColor: AppColors.accent,
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme.dark(
       primary: AppColors.accent,
       secondary: AppColors.pink,
       surface: AppColors.surface,
@@ -86,14 +114,14 @@ ThemeData buildDraculaTheme() {
       onSurface: AppColors.foreground,
       onError: AppColors.foreground,
     ),
-    iconTheme: const IconThemeData(color: AppColors.foreground, size: 18),
+    iconTheme: IconThemeData(color: AppColors.foreground, size: 18),
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
         color: AppColors.currentLine,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: AppColors.border),
       ),
-      textStyle: const TextStyle(color: AppColors.foreground, fontSize: 11),
+      textStyle: TextStyle(color: AppColors.foreground, fontSize: 11),
       waitDuration: const Duration(milliseconds: 400),
     ),
     sliderTheme: SliderThemeData(

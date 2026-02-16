@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:halcyon/services/album_art_fit_service.dart';
 import 'package:halcyon/services/settings_service.dart';
 import 'package:halcyon/theme/app_theme.dart';
+import 'package:halcyon/widgets/halcyon_controls.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -32,99 +33,107 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          Container(
-            color: AppColors.background,
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search settings...',
-                hintStyle: HalcyonTextStyles.trackMeta.copyWith(
-                  color: AppColors.comment,
-                ),
-                prefixIcon: const Icon(
-                  PhosphorIconsRegular.magnifyingGlass,
-                  color: AppColors.comment,
-                  size: 18,
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                          child: const Icon(
-                            PhosphorIconsRegular.x,
-                            color: AppColors.comment,
-                            size: 16,
-                          ),
-                        ),
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppColors.currentLine.withAlpha(60),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: AppColors.border.withAlpha(60)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: AppColors.border.withAlpha(60)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: AppColors.accent.withAlpha(120),
+    return ColorAwareBuilder(
+      builder: (context) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: Column(
+            children: [
+              Container(
+                color: AppColors.background,
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search settings...',
+                    hintStyle: HalcyonTextStyles.trackMeta.copyWith(
+                      color: AppColors.comment,
+                    ),
+                    prefixIcon: Icon(
+                      PhosphorIconsRegular.magnifyingGlass,
+                      color: AppColors.comment,
+                      size: 18,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                              child: Icon(
+                                PhosphorIconsRegular.x,
+                                color: AppColors.comment,
+                                size: 16,
+                              ),
+                            ),
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: AppColors.currentLine.withAlpha(60),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        color: AppColors.border.withAlpha(60),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        color: AppColors.border.withAlpha(60),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(
+                        color: AppColors.accent.withAlpha(120),
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  style: HalcyonTextStyles.trackMeta.copyWith(
+                    color: AppColors.foreground,
                   ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+              ),
+              Divider(height: 1, color: AppColors.border.withAlpha(60)),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      if (_matchesSearch('Album Art Interaction'))
+                        _buildSettingEntry(
+                          'Album Art Interaction',
+                          'Choose how to change the album art fit mode',
+                          SettingType.stringSelect,
+                          _buildAlbumArtInteractionSetting(),
+                        ),
+                      if (_matchesSearch('Album Art Fit Mode'))
+                        _buildSettingEntry(
+                          'Album Art Fit Mode',
+                          'Select how the album art is displayed',
+                          SettingType.stringSelect,
+                          _buildAlbumArtFitSetting(),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              style: HalcyonTextStyles.trackMeta.copyWith(
-                color: AppColors.foreground,
-              ),
-            ),
+            ],
           ),
-          Divider(height: 1, color: AppColors.border.withAlpha(60)),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (_matchesSearch('Album Art Interaction'))
-                    _buildSettingEntry(
-                      'Album Art Interaction',
-                      'Choose how to change the album art fit mode',
-                      SettingType.stringSelect,
-                      _buildAlbumArtInteractionSetting(),
-                    ),
-                  if (_matchesSearch('Album Art Fit Mode'))
-                    _buildSettingEntry(
-                      'Album Art Fit Mode',
-                      'Select how the album art is displayed',
-                      SettingType.stringSelect,
-                      _buildAlbumArtFitSetting(),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -187,7 +196,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildTypeTag(SettingType type) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: _getTypeColor(type).withAlpha(40),
@@ -287,7 +298,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         child: Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppColors.accent,
                             shape: BoxShape.circle,
                           ),

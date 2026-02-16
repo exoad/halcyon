@@ -16,15 +16,19 @@ final class AppRouter {
         routes: [
           GoRoute(
             path: '/',
-            pageBuilder: (context, state) => const NoTransitionPage(
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(
               child: HomePage(),
-            ),
+            );
+            },
           ),
           GoRoute(
             path: '/settings',
-            pageBuilder: (context, state) => const NoTransitionPage(
+            pageBuilder: (context, state) {
+              return const NoTransitionPage(
               child: SettingsPage(),
-            ),
+            );
+            },
           ),
         ],
       ),

@@ -1,6 +1,11 @@
+import 'dart:typed_data';
+import 'dart:ui';
+
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:halcyon/services/audio_engine.dart';
+import 'package:halcyon/services/color_palette_service.dart';
 import 'package:halcyon/shared.dart';
 import 'package:halcyon/theme/app_theme.dart';
 import 'package:halcyon/widgets/now_playing_bar.dart';
@@ -13,29 +18,95 @@ class HalcyonShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          _buildTitleBar(context),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
+    return ValueListenableBuilder<PaletteColors?>(
+      valueListenable: ColorPaletteService.currentPalette,
+      builder: (_, _, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: Stack(
+            children: [
+              _shellGlow(),
+              Column(
                 children: [
-                  const NowPlayingBar(),
-                  Expanded(child: child),
+                  _buildTitleBar(context),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Column(
+                        children: [
+                          const NowPlayingBar(),
+                          Expanded(child: child),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
+            ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  Widget _shellGlow() {
+    return Positioned.fill(
+      child: ValueListenableBuilder<Uint8List?>(
+        valueListenable: AudioEngine.instance.albumArt,
+        builder: (_, art, _) {
+          if (art == null || art.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return ValueListenableBuilder<bool>(
+            valueListenable: AudioEngine.instance.isPlaying,
+            builder: (_, playing, _) {
+              final glowOpacity = playing ? 0.38 : 0.24;
+              final overlayOpacity = playing ? 0.2 : 0.12;
+              return IgnorePointer(
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 42, sigmaY: 42),
+                  child: Opacity(
+                    opacity: glowOpacity,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.memory(
+                          art,
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                AppColors.accent.withAlpha(
+                                  (overlayOpacity * 255).round(),
+                                ),
+                                AppColors.background.withAlpha(
+                                  (overlayOpacity * 255).round(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
 
   Widget _buildTitleBar(BuildContext context) {
-    return ColoredBox(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
       color: AppColors.surface,
       child: Column(
         children: [
@@ -46,7 +117,11 @@ class HalcyonShell extends StatelessWidget {
                 children: [
                   Expanded(
                     child: MoveWindow(
-                      child: Container(color: AppColors.surface),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeInOutCubic,
+                        color: AppColors.surface,
+                      ),
                     ),
                   ),
                   _CustomWindowButtons(context: context),
@@ -72,9 +147,9 @@ class _CustomWindowButtons extends StatelessWidget {
       children: [
         WindowButton(
           iconBuilder: (context) {
-            return const PhosphorIcon(
+            return PhosphorIcon(
               PhosphorIconsRegular.gear,
-              color: Colors.white,
+              color: AppColors.foreground,
               size: 16,
             );
           },
@@ -87,17 +162,21 @@ class _CustomWindowButtons extends StatelessWidget {
         ),
         WindowButton(
           iconBuilder: (context) {
-            return const PhosphorIcon(
+            return PhosphorIcon(
               PhosphorIconsRegular.minus,
-              color: Colors.white,
+              color: AppColors.foreground,
               size: 16,
             );
           },
           builder: (context, child) {
-            return DecoratedBox(
-              decoration: const BoxDecoration(
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOutCubic,
+              decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.only(bottomLeft: Shared.radius),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Shared.radius,
+                ),
               ),
               child: child,
             );
@@ -106,32 +185,41 @@ class _CustomWindowButtons extends StatelessWidget {
         ),
         WindowButton(
           iconBuilder: (context) {
-            return const PhosphorIcon(
+            return PhosphorIcon(
               PhosphorIconsRegular.square,
-              color: Colors.white,
+              color: AppColors.foreground,
               size: 16,
             );
           },
           builder: (context, child) {
-            return ColoredBox(color: AppColors.surface, child: child);
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOutCubic,
+              color: AppColors.surface,
+              child: child,
+            );
           },
           onPressed: appWindow.maximizeOrRestore,
         ),
         WindowButton(
           builder: (context, child) {
-            return DecoratedBox(
-              decoration: const BoxDecoration(
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOutCubic,
+              decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.only(bottomRight: Shared.radius),
+                borderRadius: const BorderRadius.only(
+                  bottomRight: Shared.radius,
+                ),
               ),
               child: child,
             );
           },
           onPressed: appWindow.close,
           iconBuilder: (context) {
-            return const PhosphorIcon(
+            return PhosphorIcon(
               PhosphorIconsRegular.x,
-              color: Colors.white,
+              color: AppColors.foreground,
               size: 16,
             );
           },
