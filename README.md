@@ -25,4 +25,4 @@ flutter pub get
 flutter run
 ```
 
-> A rewrite of my original creation: [Halcyon](https://github.com/exoad/Halcyon.c)
+> A reimagination of my original creation: [Halcyon](https://github.com/exoad/Halcyon.c)
